@@ -5,10 +5,10 @@ import { $, showToast, wireModal, wireCandle } from "/Melt-ui.js";
 const DEFAULT_SESSION_MS = 25 * 60 * 1000;
 
 // REQUIRED: replace with your Base.dev Builder Code (bc_...)
-const BUILDER_CODE = "bc_REPLACE_ME";
+const BUILDER_CODE = "bc_ix198yaj";
 
 // REQUIRED: replace with your Base address (tip destination)
-const DEV_RECIPIENT = "0x0000000000000000000000000000000000000000";
+const DEV_RECIPIENT = "0xe8bda2ed9d2fc622d900c8a76dc455a3e79b041f";
 
 // Base mainnet USDC
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
