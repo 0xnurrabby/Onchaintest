@@ -4,7 +4,7 @@ import { $, showToast, wireModal, wireCandle } from "/Melt-ui.js";
 
 const DEFAULT_SESSION_MS = 1500000;
 // Replace with your wallet (Base address)
-const DEV_RECIPIENT = "0x0000000000000000000000000000000000000000";
+const DEV_RECIPIENT = "0xe8bda2ed9d2fc622d900c8a76dc455a3e79b041f";
 // Base mainnet USDC
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 
