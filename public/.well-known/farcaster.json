@@ -1,0 +1,31 @@
+{
+  "accountAssociation": {
+    "header": "TODO_REPLACE_BASE64_HEADER",
+    "payload": "TODO_REPLACE_BASE64_PAYLOAD",
+    "signature": "TODO_REPLACE_BASE64_SIGNATURE"
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Melt",
+    "homeUrl": "https://example.com/",
+    "iconUrl": "https://example.com/assets/icon.png",
+    "splashImageUrl": "https://example.com/assets/splash.png",
+    "splashBackgroundColor": "#020617",
+    "subtitle": "A candle you can feel",
+    "description": "A numberless focus timer. Tap to light a digital candle and watch it melt into calm.",
+    "primaryCategory": "utility",
+    "tags": [
+      "fun",
+      "simple",
+      "utility"
+    ],
+    "heroImageUrl": "https://example.com/assets/hero.png",
+    "ogTitle": "Melt",
+    "ogDescription": "A numberless focus timer. Tap to light a digital candle and watch it melt into calm.",
+    "ogImageUrl": "https://example.com/assets/hero.png",
+    "screenshotUrls": [
+      "https://example.com/assets/hero.png"
+    ],
+    "noindex": true
+  }
+}
