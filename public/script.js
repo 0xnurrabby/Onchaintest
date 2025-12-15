@@ -14,8 +14,9 @@ const DEV_RECIPIENT = "0xe8bda2ed9d2fc622d900c8a76dc455a3e79b041f";
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const USDC_DECIMALS = 6;
 
-// ✅ REQUIRED for Coinbase/Keys: Base mainnet chainId (8453) as hex
-const BASE_CHAIN_ID = "0x2105";
+// ✅ Base Account wallet_sendCalls requirements
+const BASE_CHAIN_ID = "0x2105";     // Base mainnet (8453)
+const SENDCALLS_VERSION = "2.0.0";  // required
 
 function setEnvPill(isMini) {
   const dot = $("#envDot");
@@ -31,6 +32,7 @@ function setEnvPill(isMini) {
 }
 
 function encodeErc20Transfer(to, amountUnits) {
+  // transfer(address,uint256) selector = a9059cbb
   const sig = "a9059cbb";
   const addr = to.replace(/^0x/, "").padStart(64, "0");
   const amt = amountUnits.toString(16).padStart(64, "0");
@@ -44,7 +46,9 @@ async function getDataSuffix() {
 }
 
 async function getProvider() {
+  // Farcaster/Base Mini App provider
   if (sdk?.wallet?.getEthereumProvider) return await sdk.wallet.getEthereumProvider();
+  // fallback (web)
   if (window.ethereum?.request) return window.ethereum;
   return null;
 }
@@ -67,6 +71,7 @@ function burstFromModal() {
 }
 
 window.addEventListener("load", async () => {
+  // detect environment (required)
   let isMini = false;
   try {
     isMini = await sdk.isInMiniApp();
@@ -75,71 +80,91 @@ window.addEventListener("load", async () => {
   }
   setEnvPill(isMini);
 
+  // ALWAYS call ready() (required)
   try {
     await sdk.actions.ready();
   } catch {}
 
+  // wire UI
   wireCandle(DEFAULT_SESSION_MS);
   const modal = wireModal();
   const sendBtn = document.getElementById("sendTip");
 
   async function sendTipWithRitual() {
-    if (!BUILDER_CODE || BUILDER_CODE === "bc_REPLACE_ME") {
-      showToast("Set BUILDER_CODE in script.js");
-      return;
-    }
-    if (!DEV_RECIPIENT || DEV_RECIPIENT === "0x0000000000000000000000000000000000000000") {
-      showToast("Set DEV_RECIPIENT in script.js");
-      return;
-    }
-
-    const provider = await getProvider();
-    if (!provider?.request) {
-      showToast("Wallet not available here.");
-      modal.close();
-      return;
-    }
-
-    const tipHuman = Number(modal.getTipAmount());
-    if (!Number.isFinite(tipHuman) || tipHuman <= 0) {
-      showToast("Enter a valid amount.");
-      return;
-    }
-
-    // 1) Preparing moment (hearts)
-    modal.setState("preparing");
-    burstFromModal();
-    await new Promise((r) => setTimeout(r, 1100));
-
-    // 2) Confirm in wallet (more hearts)
-    modal.setState("confirm");
-    burstFromModal();
-
-    const units = BigInt(Math.floor(tipHuman * 10 ** USDC_DECIMALS));
-    const data = encodeErc20Transfer(DEV_RECIPIENT, units);
-
     try {
+      if (!BUILDER_CODE || !BUILDER_CODE.startsWith("bc_")) {
+        showToast("Set a valid BUILDER_CODE (bc_...) in script.js");
+        return;
+      }
+      if (!DEV_RECIPIENT || !DEV_RECIPIENT.startsWith("0x") || DEV_RECIPIENT.length !== 42) {
+        showToast("Set a valid DEV_RECIPIENT address in script.js");
+        return;
+      }
+
+      const provider = await getProvider();
+      if (!provider?.request) {
+        showToast("Wallet not available here.");
+        modal.close();
+        return;
+      }
+
+      const tipHuman = Number(modal.getTipAmount());
+      if (!Number.isFinite(tipHuman) || tipHuman <= 0) {
+        showToast("Enter a valid amount.");
+        return;
+      }
+
+      // 1) Preparing moment (hearts)
+      modal.setState("preparing");
+      burstFromModal();
+      await new Promise((r) => setTimeout(r, 1100));
+
+      // 2) Confirm in wallet (more hearts)
+      modal.setState("confirm");
+      burstFromModal();
+
+      // USDC (6 decimals) -> base units (integer)
+      const units = BigInt(Math.floor(tipHuman * 10 ** USDC_DECIMALS));
+      const data = encodeErc20Transfer(DEV_RECIPIENT, units);
+
+      // Builder code attribution
       const dataSuffix = await getDataSuffix();
 
+      // ✅ Base Account requires `from`
+      const accounts = await provider.request({ method: "eth_requestAccounts" });
+      const from = accounts?.[0];
+      if (!from) throw new Error("No wallet account");
+
       modal.setState("sending");
+
+      // ✅ Correct Base Account wallet_sendCalls schema
       await provider.request({
         method: "wallet_sendCalls",
         params: [
           {
-            // ✅ FIX: chainId required
+            version: SENDCALLS_VERSION,
+            from,
             chainId: BASE_CHAIN_ID,
-
-            calls: [{ to: BASE_USDC, data }],
+            atomicRequired: true,
+            calls: [
+              {
+                to: BASE_USDC,
+                value: "0x0",
+                data,
+              },
+            ],
             capabilities: { dataSuffix },
           },
         ],
       });
 
+      // success vibe
       modal.close();
       heartsBurst({ count: 28, spread: 240, rise: 360, duration: 1600 });
       showToast("Thank you for the warmth ❤");
     } catch (e) {
       console.error(e);
+      // gentle fallback
       modal.setState("select");
       showToast("Maybe next time.");
     }
