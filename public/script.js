@@ -14,6 +14,9 @@ const DEV_RECIPIENT = "0xe8bda2ed9d2fc622d900c8a76dc455a3e79b041f";
 const BASE_USDC = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
 const USDC_DECIMALS = 6;
 
+// ✅ REQUIRED for Coinbase/Keys: Base mainnet chainId (8453) as hex
+const BASE_CHAIN_ID = "0x2105";
+
 function setEnvPill(isMini) {
   const dot = $("#envDot");
   const txt = $("#envText");
@@ -48,7 +51,10 @@ async function getProvider() {
 
 function burstFromModal() {
   const modalEl = document.querySelector(".modal");
-  if (!modalEl) { heartsBurst(); return; }
+  if (!modalEl) {
+    heartsBurst();
+    return;
+  }
   const r = modalEl.getBoundingClientRect();
   heartsBurst({
     originX: r.left + r.width * 0.5,
@@ -56,16 +62,22 @@ function burstFromModal() {
     count: 22,
     duration: 1250,
     spread: 200,
-    rise: 320
+    rise: 320,
   });
 }
 
 window.addEventListener("load", async () => {
   let isMini = false;
-  try { isMini = await sdk.isInMiniApp(); } catch { isMini = false; }
+  try {
+    isMini = await sdk.isInMiniApp();
+  } catch {
+    isMini = false;
+  }
   setEnvPill(isMini);
 
-  try { await sdk.actions.ready(); } catch {}
+  try {
+    await sdk.actions.ready();
+  } catch {}
 
   wireCandle(DEFAULT_SESSION_MS);
   const modal = wireModal();
@@ -112,10 +124,15 @@ window.addEventListener("load", async () => {
       modal.setState("sending");
       await provider.request({
         method: "wallet_sendCalls",
-        params: [{
-          calls: [{ to: BASE_USDC, data }],
-          capabilities: { dataSuffix }
-        }]
+        params: [
+          {
+            // ✅ FIX: chainId required
+            chainId: BASE_CHAIN_ID,
+
+            calls: [{ to: BASE_USDC, data }],
+            capabilities: { dataSuffix },
+          },
+        ],
       });
 
       modal.close();
